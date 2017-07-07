@@ -1,0 +1,21 @@
+{
+  "name": "htmlgenerator",
+  "version": "1.0.0",
+  "description": "Html generator using JQuery and MustacheJS",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "html",
+    "generator",
+    "javascript",
+    "mustache"
+  ],
+  "author": "Paulo Silva Barros",
+  "license": "MIT",
+  "dependencies": {
+    "jquery": "^3.2.1",
+    "mustache": "^2.3.0"
+  }
+}
