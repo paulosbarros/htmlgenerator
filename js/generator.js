@@ -1,64 +1,54 @@
-var ElementGenerator = (function(){
-	var elementsPath = "Elements/"
-	var type = ".html";
-	var outputIdTemp;
-	var dataTemp;
-	var templateTemp;
-	
-	var loadTemplateOnDiv = function (name, data, outputId) {
-		outputIdTemp = outputId;
-		dataTemp = data;
-		$.ajax({
-			url : getFullName(name)
-		}).done(
-			function(template){
-				templateTemp = template;
-				renderTemplateOnDiv();
-			}
-		);		
+var ElementGenerator = (function(templatesPath, templatesType){
+	var Levels = { 
+		ERROR : 'ERROR',
+		INFO : 'INFO',
+		WARNING : 'WARNING'
 	};
 
-	var renderTemplateOnDiv = function () {
-		var rendered = Mustache.render(templateTemp, dataTemp);
-		$('#'+outputIdTemp).append(rendered);		
-	};
-	
-	var returnRenderedTemplate = function () {
-		return Mustache.render(templateTemp, dataTemp);
-	};
-	
-	var getRenderedTemplate = function (name, data) {
-		dataTemp = data;
-		$.ajax({
-			type : 'GET',
-			url : getFullName(name)
-		}).done(
-			function(template){
-				templateTemp = template;
-				returnRenderedTemplate();
+	var build = function(name, data, outputId) {
+		asyncRequest({
+			url : getFullName(name),
+			success : function(template){
+				renderAndAppend(template, data, outputId);
+				log('Success rendering the template ' + name, Levels.INFO);
+			},
+			error : function(){
+				log('\'' + getFullName(name) + '\' File not found when try to get a template', Levels.ERROR);
 			}
-		);
+		});
 	};
-	
+
+	var renderAndAppend = function (template, data, outputId) {
+		var rendered = Mustache.render(template, data);
+		document.getElementById(outputId).innerHTML += rendered;		
+	};
+
 	var getFullName = function(name){
-		return elementsPath + name + type;
+		return templatesPath + '/' + name + '.' + templatesType;
 	};
-	
-	var clearTemp = function () {
-		outputIdTemp = '';
-		dataTemp = '';
-		templateTemp = '';
+
+	var log = function(message, level){
+		console.log('ElementGenerator - ' + level + ' - ' + message);
 	}
+
+	var asyncRequest = function(params){
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function () {
+			if(this.readyState == 4){
+				if(this.status == 200 && typeof params.success === 'function'){
+					params.success(this.responseText);
+				}else if((typeof params.error) === 'function'){
+					params.error();
+				} else {
+					log('Unexpected error', Levels.ERROR);
+				}
+			} 
+		};
+		xhttp.open("GET", params.url, true);
+		xhttp.send();
+	};
 
 	return {
-		loadTemplateOnDiv : loadTemplateOnDiv,
-		getRenderedTemplate : getRenderedTemplate
+		build : build
 	}
-})();
-
-ElementGenerator.loadTemplateOnDiv('Kanban-Column', {id:123,content:'teste'}, 'output-div');
-
-var element = ElementGenerator.getRenderedTemplate('Kanban-Column',{id:456,content:'elemento interno'});
-console.log(element);
-
-ElementGenerator.loadTemplateOnDiv('Kanban-Column', {id:789,content:element}, 'output-div');
+});
